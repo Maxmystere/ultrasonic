@@ -295,6 +295,9 @@ public class DownloadServiceLifecycleSupport
 		serializeDownloadQueue();
 	}
 
+	private static boolean isPlayPauseDelayStarted = false;
+	private static int playPauseExtraKeyPressNumber;
+
 	private void handleKeyEvent(KeyEvent event)
 	{
 		if (event.getAction() != KeyEvent.ACTION_DOWN || event.getRepeatCount() > 0)
@@ -306,7 +309,32 @@ public class DownloadServiceLifecycleSupport
 		{
 			case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
 			case KeyEvent.KEYCODE_HEADSETHOOK:
-				downloadService.togglePlayPause();
+				if (!isPlayPauseDelayStarted)
+				{
+					AsyncTask.execute(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								playPauseExtraKeyPressNumber = 0;
+								isPlayPauseDelayStarted = true;
+								Thread.sleep(500);
+
+								if (playPauseExtraKeyPressNumber == 0)
+									downloadService.togglePlayPause();
+								else
+									downloadService.setSongRating(playPauseExtraKeyPressNumber);
+
+								isPlayPauseDelayStarted = false;
+							} catch (InterruptedException e) {
+								downloadService.togglePlayPause();
+							}
+						}
+					});
+				}
+				else
+				{
+					playPauseExtraKeyPressNumber ++;
+				}
 				break;
 			case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
 				downloadService.previous();
