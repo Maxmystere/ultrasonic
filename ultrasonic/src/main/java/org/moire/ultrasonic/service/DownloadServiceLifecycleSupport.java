@@ -317,13 +317,18 @@ public class DownloadServiceLifecycleSupport
 							try {
 								playPauseExtraKeyPressNumber = 0;
 								isPlayPauseDelayStarted = true;
-								Thread.sleep(500);
+								Thread.sleep(2000);
 
 								if (playPauseExtraKeyPressNumber == 0)
 									downloadService.togglePlayPause();
-								else
+								else {
+									while(true) {
+										int oldPressNumber = playPauseExtraKeyPressNumber;
+										Thread.sleep(2000);
+										if (oldPressNumber == playPauseExtraKeyPressNumber) break;
+									}
 									downloadService.setSongRating(playPauseExtraKeyPressNumber);
-
+								}
 								isPlayPauseDelayStarted = false;
 							} catch (InterruptedException e) {
 								downloadService.togglePlayPause();
