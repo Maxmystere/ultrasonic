@@ -25,9 +25,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -308,6 +311,8 @@ public class DownloadServiceLifecycleSupport
 		switch (event.getKeyCode())
 		{
 			case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+			case KeyEvent.KEYCODE_MEDIA_PLAY:
+			case KeyEvent.KEYCODE_MEDIA_PAUSE:
 			case KeyEvent.KEYCODE_HEADSETHOOK:
 				if (!isPlayPauseDelayStarted)
 				{
@@ -328,6 +333,7 @@ public class DownloadServiceLifecycleSupport
 										if (oldPressNumber == playPauseExtraKeyPressNumber) break;
 									}
 									downloadService.setSongRating(playPauseExtraKeyPressNumber);
+									ratingFeedbackBeep(playPauseExtraKeyPressNumber);
 								}
 								isPlayPauseDelayStarted = false;
 							} catch (InterruptedException e) {
@@ -353,15 +359,6 @@ public class DownloadServiceLifecycleSupport
 			case KeyEvent.KEYCODE_MEDIA_STOP:
 				downloadService.stop();
 				break;
-			case KeyEvent.KEYCODE_MEDIA_PLAY:
-				if (downloadService.getPlayerState() != PlayerState.STARTED)
-				{
-					downloadService.start();
-				}
-				break;
-			case KeyEvent.KEYCODE_MEDIA_PAUSE:
-				downloadService.pause();
-				break;
 			case KeyEvent.KEYCODE_1:
 				downloadService.setSongRating(1);
 				break;
@@ -382,6 +379,15 @@ public class DownloadServiceLifecycleSupport
 		}
 	}
 
+	private void ratingFeedbackBeep(int count) throws InterruptedException {
+		ToneGenerator toneGenerator = new ToneGenerator(AudioManager.STREAM_NOTIFICATION, 100);
+
+		for (int i = 0; i < count; i++) {
+			toneGenerator.startTone(ToneGenerator.TONE_DTMF_S, 100);
+			Thread.sleep(200);
+		}
+		toneGenerator.release();
+	}
 	/**
 	 * Logic taken from packages/apps/Music.  Will pause when an incoming
 	 * call rings or if a call (incoming or outgoing) is connected.
